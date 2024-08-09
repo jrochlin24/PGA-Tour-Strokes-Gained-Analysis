@@ -1,0 +1,515 @@
+---
+title: "Predicting the Most Impactful Strokes Gained Statistics for Sustained Success on the PGA Tour"
+author: "Devon Anderson, Danny Blumenstein, and Josh Rochlin"
+date: "March 2, 2024"
+output: pdf_document
+toc: true
+number_sections: true
+toc_depth: 2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+`\pagebreak 
+
+# 1. Abstract
+
+Professional golfers on the PGA Tour are some of the most highly compensated athletes in the world. Because PGA Tour players earn money depending on where they finish in a tournament, consistent performance is key for success. Perhaps no other statistical category has dominated the golf data vernacular over the past decade more than “Strokes Gained.” Created by Columbia University professor Mark Broadie, Strokes Gained analyzes each player’s performance in comparison to their fellow competitors in a tournament field (Sens, 2018). The injection of Strokes Gained into professional golf has fundamentally changed the way players practice, diagnose their strengths and weaknesses, and select shots during competition. In this paper, we explore which Strokes Gained statistics have the greatest correlation to money earned on the PGA Tour.  
+
+# 2. Introduction
+
+Golf is an ancient game. From the first-time 15th century Scots knocked pebbles around the sandy dunes of what would become The Old Course at St Andrews, its core traditions have remained. Golf's immunity to the grips of time is strengthened by its ability to transform. Analytics was first introduced to the sport in 2001, when the Professional Golf Association (PGA) created ShotLink, which tracks every shot, by every player, during the PGA Tour season. Strokes Gained statistics are the primary metrics recorded by ShotLink (Cunneff, 2019). Current PGA Tour players may have access to ultramodern equipment, technology-infused golf balls, and robust swing monitoring systems, but true success in professional golf stems from the ability to make strategic decisions under pressure. There is no tried-and-true way to win a golf tournament. A frightening combination of physical, mental, earthly, and heavenly factors can affect what a pro will do when he steps over his ball during competition. However, a pro that has Strokes Gained data in their back pocket can more easily navigate the complex decision-making processes the sport demands. 
+
+Strokes Gained is the gold standard for data analysis in golf. Because Strokes Gained accounts for hole distance, shot length, and lie, it provides an all-inclusive perspective of how well a player is performing. These metrics are highly sought-after for discovering what the best aspects of a pro's game are. We are interested in uncovering why pro golfers are embracing Strokes Gained stats to improve performance. For our first bullet, we will use a statistical test to decide if Strokes Gained:Approach is one of the most important metrics in earning money on tour. Our second bullet will figure out if a player should increase their average driving distance from 275 yards to 285 to make more money.  
+
+## 2.1 Motivation
+
+We are awe-inspired by what pro golfers can do. Golf is an agonizing game, mental warfare. The painstaking hours of practice these guys have put in throughout their lives to be the absolute best is admirable. This investigation will help us learn what really makes a pro golfer's game whole. Although pro golfers play the sport an entirely different way from average players like us, evaluating these stats could give us more clarity on the weak parts of our game that have been ignored for far too long.
+
+\pagebreak
+
+# 3. Data Description 
+
+The data set ("pgaTourDataNew.csv") provides statistical performance data for professional golfers from 2010-2018. Each row contains stats collected during a particular season for a player. There are 18 variables in the data set:
+
+1. Player.Name (Categorical): Name of the golfer. 
+
+2. Rounds (Numerical): The number of rounds played in that year by that player.
+
+3. Fairway.Percentage (Numerical): The percentage of time a player hits a tee shot into the fairway.
+
+4. Year (Numerical): The season the statistics were collected.
+
+5. Avg.Distance (Numerical): The average distance of a tee-shot. 
+
+6. gir (Numerical): Green in Regulation - A Green in Regulation is achieved when a player reaches the green in 'par minus 2 strokes.' i.e.: On a Par 3, a player hits the ball on the green during their first stroke.
+
+7. Average.Putts (Numerical): The average number of putts.
+
+8. Average.Scrambling (Numerical): Scrambling occurs when a player misses a green in regulation, but still makes par or better on the hole.
+
+9. Average.Score (Numerical): The average of all scores recorded by a player in that season.
+
+10. Points (Numerical): The number of FedEx Cup points scored in a season. The FedEx Cup is a season long competition on the PGA Tour. Players are awarded points toward the FedEx Cup depending on tournament finish.
+
+11. Wins (Numerical): The number of tournaments a player has won during that season.
+
+12. Top.10 (Numerical): The number of Top 10 finishes in tournaments during that season. 
+
+13. Average.SG.Putts (Numerical): How many strokes a player gains or loses on the green.
+
+14. Average.SG.Total (Numerical): All strokes gained stats combined.
+
+15. SG.OTT (Numerical): How many strokes a player gains or loses off the tee on Par 4s and Par 5s. 
+
+16. SG.APR (Numerical): How many strokes a player gains or loses approaching the green. An approach shot on a Par 4 and Par 5 are shots that are not off of the tee. On a Par 3, a tee shot is considered an approach shot. 
+
+17. SG.ARG (Numerical): How many strokes a player gains or loses around the green. A shot within 30 yards of the edge of the green is considered around the green. Shots taken on the putting green are not included.
+
+18. Money (Numerical): The amount of prize money a player earned in that season.
+
+\pagebreak
+
+## 3.1 Preliminary Analysis
+
+Below is a preliminary analysis of the data set 'Golf.' We loaded in the data and took a summary to find any irregularities. There were several missing values in the "Wins" and "Top.10" columns, so they were replaced with zeros. The rest of the NA's in the statistical categories were omitted. "Wins," "Top.10," and "Points" were excluded because winning tournaments and finishing in the top 10, as well as gaining FedEx Cup points, are synonymous with earning money.  
+
+## 3.2 Data Set Summary
+
+```{r}
+library(readr)
+Golf <- read.csv("PgaTourDataNew.csv")
+summary(Golf)
+Golf = subset(Golf, select = -c(Points, Wins, Top.10) )
+options(scipen = 999)
+```
+
+## 3.3 Cleaned Data Set Summary
+
+```{r}
+Golf <- na.omit(Golf)
+summary(Golf)
+```
+
+
+## 3.4 Data Set Structure
+
+```{r}
+str(Golf)
+```
+From the `str` function, we see that the variables are correctly categorized. 
+
+\pagebreak 
+
+## 3.5 Raw Model 
+
+We provide a summary of the raw model. "Player.Name" and "Year" are not used in the raw model because they are not statistical measurements. 
+```{r}
+Raw_Model = lm(Money ~ . -Player.Name -Year, data = Golf)
+summary(Raw_Model)
+```
+We are satisfied with the performance of our raw model, but we can do much better. The adjusted R2 is 60.59%. From the model, we see that all of the Strokes Gained metrics are statistically significant in earning money. "gir" and "Fairway.Percentage" are the only variables that are not statistically significant.
+
+\pagebreak
+
+# 4. Descriptive Analysis 
+
+## 4.1 Corrpolot
+
+We visualize the relationships between the numerical variables using the `corrplot` function. 
+```{r results = "hide"}
+library(corrplot)
+c=cor(Golf[,-1,])
+```
+
+```{r}
+corrplot(c)
+```
+
+From the corrplot, we can make several interpretations about the relationships between the numerical variables. Let's dive into some noticeable findings:  
+
+Average.Score and Money: There seems to be a strong, negative correlation between "Average.Score" and "Money." As scoring average increases, money earned tends to decrease. This finding makes sense because lowering score is the ultimate goal in golf. But, as we all know, that does not come easy.  
+
+Avg.Distance and gir: There is a strong, positive correlation between average driving distance and greens-in-regulation. This finding indicates that longer drives increase the chance of hitting the green in par minus two strokes. Being farther away from the green diminishes accuracy. Golf courses are adjusting to rapidly increasing distance across the best players in the world. According to a study by the United States Golf Association (USGA), the median course length in the United States increased almost 20 percent from the 1910s through 2010 (Klein, 2021). But interestingly, driving distance on the PGA Tour did not increase dramatically throughout the early 21st century. A study by The R&A found that driving distance on the PGA Tour and the European Tour increased by about .7 percent between 2003 and 2015 (Taylor, 2016). 
+
+Average.Putts and Average.Score: There is a weak, positive correlation between "Average.Putts" and "Average.Score." Although putting well is not significant in lowering score for the pros, its importance should not be diminished for amateurs. Putting is a delicate part of the game, and if focused on through dedicated practice, it can provide an amateur with a more well-rounded skill set. A pros time for practice is not limited. For the average golfer, the only thing limited is time.  
+
+Average.SG.Total and Average.Score: There is an extremely strong, negative correlation between Average.SG.Total and Average.Score. This relationship highlights the power of Strokes Gained. Players with lowering scoring averages are likely to have higher Strokes Gained Total numbers. 
+
+\pagebreak
+
+## 4.2 Histograms 
+```{r}
+names <- names(Golf)
+par(mfrow=c(3,3))
+for (i in c(2,3, 5:8)) {
+  hist(Golf[,i], main=names[i], xlab=names[i])
+}
+```
+
+```{r}
+names <- names(Golf)
+par(mfrow=c(3,3))
+for (i in c(9:15)) {
+  hist(Golf[,i], main=names[i], xlab=names[i])
+}
+```
+
+From the histograms, we see that all of the Strokes Gained stats are normally distributed. "gir" is right-skewed. "Money" is heavily right-skewed.
+
+\pagebreak
+
+## 4.3 QQ-Plots
+```{r}
+names <- names(Golf)
+par(mfrow=c(3,3))
+for (i in c(2,3,5:8)) {
+qqnorm(Golf[,i],main=names[i])
+qqline(Golf[,i])
+}
+```
+
+```{r}
+names <- names(Golf)
+par(mfrow=c(3,3))
+for (i in c(9:15)) {
+qqnorm(Golf[,i],main=names[i])
+qqline(Golf[,i])
+}
+```
+According to the QQ-Plots, all of the variables except "Money" are normally distributed. We can take a log transformation of "Money to make it more normal.
+
+```{r}
+par(mfrow=c(1,1))
+hist(log(Golf$Money),main="log-Money")
+```
+
+\pagebreak 
+
+## 4.4 Scatterplots
+
+We also investigate the relationships between pertinent metrics through scatterplots. 
+
+```{r}
+plot(Golf$Fairway.Percentage, Golf$Money, xlab = "Fairway Percentage",
+     ylab="Money Earned",
+     main = "Scatterplot of Fairways Hit vs. Money Earned")
+```
+
+From the scatterplot, it is interesting to see how hitting a high amount of fairways off the tee does not necessarily equate to success. The big earners on tour are bombers of the golf ball and have an average to below-average fairway hit rate. To pros, maximizing distance and having a close proximity to the green are key, no matter the lie.
+
+```{r}
+plot(Golf$Average.Score, Golf$Money, xlab = "Average Score",
+     ylab="Money Earned", 
+     main= "Scatterplot of Average Score vs. Money Earned")
+```
+
+This scatterplot makes a lot of sense. Lower scores contribute to more success. But with all the technological improvements in equipment, has scoring on the PGA Tour changed all that much? Surprisingly, average golfers are becoming better players faster than the pros. According to the USGA, between 1991 and 2016, the average USGA handicap for an average male player dropped from 16.3 to 14.4, almost two full strokes (Stachura, 2017). Two strokes is a critical difference. For tour players, the average score in 1991 was 71.50. In 2016, it only increased .5% to 71.12 (Stachura, 2017). With all of the obstacles average golfers have in the way of actually practicing the sport, we are doing pretty well. 
+
+
+```{r}
+plot(Golf$Average.Putts, Golf$gir, xlab = "Average.Putts",
+     ylab="Greens in Regulation", 
+     main = "Scatterplot of Average Putts vs. GIR")
+```
+There is a strong, positive correlation between the average number of putts per round and greens in regulation. This relationship suggests that pros need to be accurate iron players and good putters in order to sustain success.
+
+```{r}
+plot(Golf$Avg.Distance, Golf$Fairway.Percentage, xlab = "Average Driving Distance",
+     ylab="Fairway Percentage", 
+     main = "Scatterplot of Avg. Driving Distance vs. Fairways Hit")
+```
+
+Hitting the ball 310+ yards off the tee may provide a pro with a more forgiving club to hit into the green, but that comes at the expense of accuracy. Thick rough will make the average golfer shiver, but the pros will welcome any lie, as long as the next shot to the green is unobstructed. The pros know the right places to miss a tee shot and minimize danger. The average player's hole is often ruined if they hit their drive into risky areas.   
+
+```{r}
+plot(Golf$Avg.Distance, Golf$Average.Putts, xlab = "Average Distance",
+     ylab="Average Putts", 
+     main = "Scatterplot of Avg. Distance vs. Avg. Putts")
+```
+There is a moderately-positive correlation between average driving distance and the average number of putts per round. Although driving the ball far provides pros with closer proximity to the green, the hole is not finished until the ball is in the bottom of the cup. In fact, the average tour player lands the ball 20 feet from the pin from 100-125 yards in the fairway (Sherman, 2023). That is not very close. And to give the average golfer a sigh of relief, pros only make 50% of their putts from inside of eight feet (Sherman, 2023). We average golfers should be easier on ourselves, but we think we can be perfect. 
+
+\pagebreak
+
+
+# 5. Bullet 1
+
+From 2004 to 2021, nearly 40% of winners on tour were ranked in the top 5 in SG:APR (Lack, 2021). According to datagolf.com, about 35% of the scoring dispersion on the average PGA Tour course can be explained by SG:APR (Powers, 2020). Can we refute the claim that SG:APR is one of the most important metrics in earning money on tour? 
+
+```{r}
+reg = lm(Money ~ SG.APR, data = Golf)
+summary(reg)
+```
+From the linear model predicting money won by strokes gained through approach shots, we can see that gaining strokes is a significant predictor.
+
+We can establish a t-test confidence interval of 99% using an alpha of 0.01, which results in t-value bounds of ±3.169. We use the following hypotheses:
+
+**Ho: Beta1 equals 0**
+**Ha: Beta1 does not equal 0**
+
+The regression model summary shows that the t-value returned for SG.APR is far more extreme than ±3.169. Therefore, we reject the null hypothesis that there is no statistical relationship between Money and SG.APR. As there is a correlation between wins and money earned we can see that strokes gained from approach shots has a significant impact on winning tournaments on the PGA Tour.
+
+Using the regression model above, we get the following equation that we can use to predict winnings from Strokes Gained:APR:
+
+$$\hat{y}=1365397+1891104x$$
+
+For every one unit increase in Strokes Gained:APR, earnings are expected to increase by $1,891,104.
+
+Because Tour pros can incur costs for travel, lodging, food, caddying, and coaching of $150,000 per year, we can derive our break-even point in terms of shots gained from approach shots:
+  
+  **Breakeven** = $$(-1365397+150000)/1891104=-0.6427$$
+  
+From this equation, we observe that tour pros who gain fewer than -0.6427 strokes with their approach shots are likely making no money or even losing money after considering the costs of being a pro golfer.
+
+\pagebreak
+
+# 6. Bullet 2
+
+A good drive in golf is far and accurate. In recent years, players have been developing more athletic swings to create more force on the golf ball. The most reliable swings in golf are rooted deep in the core. Utilizing core strength to make a full, unrestricted hip turn is a formula for long and powerful drives. Every pro wants to maximize distance, but does hitting the ball just a little farther off the tee make a substantial difference in money earned?
+
+```{r}
+Bullet2 = lm(Money ~ Avg.Distance, data = Golf)
+summary(Bullet2)
+```
+
+From the linear model predicting money won by average drive distance, we can quickly see that there is a premium on extra driver yardage off the tee.
+
+We can establish a t-test confidence interval of 99% using an alpha of 0.01, which results in t-value bounds of ±3.169.
+
+We use the following hypotheses:
+
+**Ho: Beta1 equals 0**
+
+**Ha: Beta1 does not equal 0**
+
+As shown in the summary of the regression model created above, we observe that t-value returned for Avg.Distance is far more extreme than ±3.169. Therefore, we reject the null hypothesis that there is no statistical relationship between Money and Avg.Distance.
+
+Below is the equation we can use to predict winnings from average drive distance:
+
+$$\hat{y}=-13670696+52132x$$
+
+We can interpret the coefficient very simply - each additional yard off the tee when hitting driver is expected to increase earnings that year by $52,132.
+
+Considering tour pros can incur travel, lodging, food, caddying, and coaching costs of $150,000 per year, we can derive our break-even point in terms of yards:
+  
+  **Breakeven** = $$(13679696+150000)/52132=265.11$$
+
+Therefore, we observe that tour pros hitting less than 266 yards with their driver are likely making no money after considering expenses, and in many cases, losing money.
+
+Next, we examine the expected earnings of a player hitting their driver 275 yards on average:
+  
+  **Earnings**=$$-13670696+(275*52132)=665604$$
+
+Let's compare this finding to the player that hits their driver 285 yards on average:
+
+  **Earnings**=$$-13670696+(285*52132)=1186924$$
+  
+As we can see, a player increasing their average driving distance from 275 to 285 can expect to nearly double their earnings from 665,604 to 1,186,924. This jump in earnings is quite remarkable, and demonstrates that a player would be wise to invest in additional coaching and physical training to achieve further driving distance off the tee.
+
+\pagebreak
+
+# 7. Parsimonious Model Building
+
+## 7.1 Backward Elimination Model
+We build a model using backward elimination. We do not use "Player.Name" in our model because it is a categorical variable. "Year" is not used because it is not a statistical metric.
+
+```{r results = "hide"}
+full = lm(Money ~ . -Player.Name -Year, data = Golf)
+BE = step(full)
+```
+
+```{r}
+summary(BE)
+```
+The backward elimination model has an adjusted R2 of 60.61% and an AIC of 45856.9. Each statistical variable in the model is significant. 
+
+\pagebreak
+
+## 7.2 Foward Selection Model
+
+We build a model using forward selection and produce a summary.
+
+```{r results = "hide"}
+null = lm(Money ~ 1, data = Golf)
+FS = step(null, scope = list(upper=full), direction = "forward")
+```
+
+```{r}
+summary(FS)
+```
+The forward elimination model has an adjusted R2 of 60.45% and an AIC of 45860.55. The backward elimination model has a lower AIC, so it is the leader in the clubhouse. 
+
+\pagebreak
+
+## 7.3 Stepwise Selection Model
+
+We build a model using stepwise selection and produce a summary.
+
+```{r results = "hide"}
+SW = step(null, scope = list(upper = full), direction = "both")
+```
+
+```{r}
+summary(SW)
+```
+The stepwise model has the same adjusted R2 as the backward elimination and forward selection models. It has the same AIC as the forward selection model. 
+
+\pagebreak
+
+## 7.4 Best Subsets Model
+
+We build a model using best subsets to predict money earned from all other predictor variables.
+
+```{r}
+library(leaps)
+BSR = regsubsets(Money ~ . -Player.Name -Year, data=Golf)
+```
+
+```{r}
+plot(BSR, scale = "adjr2")
+```
+
+From the best subsets model, we see that "Avg.Distance," "Average.Putts," "Average.Scrambling," "Average.Score," "Average.SG.Putts," and "Average.SG.Total" should be included in the parsimonious model.
+
+\pagebreak
+
+# 8. Original Parsimonious Model
+
+```{r}
+Parsimonious_Model = lm(Money ~ Avg.Distance + Average.Putts + Average.Scrambling + Average.Score + Average.SG.Putts + Average.SG.Total, data=Golf)
+summary(Parsimonious_Model)
+```
+
+We are satisfied with the performance of our parsimonious model, but we can do much better. We have six predictors in our model, but our adjusted R2 is 60.26, indicating needed improvement. Each variable in the model is statistically significant. 
+
+\pagebreak
+
+# 9. Residual Diagnostics for Original Parsimonious Model
+
+We construct a residual plot and a histogram of the residuals of the parsimonious model and discuss if the linear regression model assumptions are met.
+
+```{r}
+par(mfrow=c(1, 2))
+plot(Parsimonious_Model, which = 1)
+hist(Parsimonious_Model$residuals, main = "", xlab = "Residuals")
+
+```
+As our parsimonious model stands, we are not meeting the LINE assumptions for a linear regression model. The line is curved, the residuals show a distribution that is right-skewed, and there does not appear to be constant variance. We will adjust the variables in the parsimonious model in order to achieve the assumptions.
+
+\pagebreak
+
+## 9.1 Adjusting Parsimonious Variables
+
+We adjust the parsimonious variables in order to increase their linearity with the response variable. 
+
+```{r}
+Dist_Money = lm(log(Money) ~ log(Avg.Distance^2), data = Golf)
+plot(Dist_Money, which =1)
+```
+To make the relationship between "Avg.Distance" and "Money" more linear, we take a log transformation of "Avg.Distance" and apply a square to it. Although not perfect, the line is almost centered around zero. 
+
+```{r}
+Putts_Money = lm(log(Money) ~ I(Average.Putts)^3, data = Golf)
+plot(Putts_Money, which =1)
+```
+To make the relationship between "Average.Putts" and "Money" more linear, we do a cubic transformation for "Average.Putts." The line is closely centered around zero. 
+
+
+```{r}
+Scram_Money = lm(log(Money) ~ I(Average.Scrambling)^3, data = Golf)
+plot(Scram_Money, which =1)
+```
+To make the relationship between "Average.Scrambling" and "Money" more linear, we applied a cubic transformation to "Average.Scrambling." Although not perfect, the line is almost centered around zero.
+
+
+```{r}
+Score_Money = lm(log(Money) ~ I(Average.Score)^3, data = Golf)
+plot(Score_Money, which =1)
+```
+
+To make the relationship between "Average.Score" and "Money" more linear, we apply a cubic transformation to "Average.Score." The line is closely centered around zero.
+
+
+```{r}
+SGPutts_Money = lm(log(Money) ~ I(Average.SG.Putts)^3, data = Golf)
+plot(SGPutts_Money, which =1)
+```
+To make the relationship between "Average.SG.Putts" and "Money" more linear, we apply a cubic transformation to "Average.SG.Putts." The line is closely centered around zero. 
+
+
+```{r}
+SGTotal_Money = lm(log(Money) ~ I(Average.SG.Total)^3, data = Golf)
+plot(SGTotal_Money, which =1)
+```
+To make the relationship between "Average.SG.Total" and "Money" more linear, we apply a cubic transformation to "Average.SG.Total." The line is closely centered around zero.
+
+\pagebreak
+
+# 10. Final Parsimonious Model 
+
+```{r}
+Final_Parsimonious_Model = lm(log(Money) ~ log(Avg.Distance^2) + I(Average.Putts)^3 + I(Average.Score)^3 + I(Average.Scrambling)^3 + I(Average.SG.Putts)^3 + I(Average.SG.Total)^3, data=Golf)
+summary(Final_Parsimonious_Model)
+```
+Our final parsimonious model performs much better than our original parsimonious model. 71.99% of the variation in money earned can be explained by the variation in "Avg.Distance," "Average.Putts," "Average.Score," "Average.Scrambling," "Average.SG.Putts," and "Average.SG.Total." Six metrics, including two Strokes Gained metrics, are significant. The adjusted R2 improved to 71.89%. Overall, we are satisfied with this model. 
+
+## 10.1 Interpretation of Final Parsimonious Model Coefficients 
+
+1. Average.Score is the most significant predictor. No matter how well a pro may drive, approach the green, chip, or putt, the whole in golf is greater than the sum of the parts. 
+
+2. Average.Distance has a positive relationship with money earned, indicating that as players increase their driving distance, they perform better. 
+
+3. Average.SG.Putts and Average.SG.Total are the only two significant Strokes Gained metrics. From 2010-2018, putting well contributed to sustained success on tour. The inclusion of Average.SG.Total in the model suggests that all Strokes Gained stats combined are significant.   
+
+3. Average.Putts, Average.Score, Average.Scrambling, and Average.SG.Putts have a negative relationship with money earned. As these metrics decrease, it is expected that money earned will increase.
+
+\pagebreak
+
+# 11. Final Parsimonious Model Residual Diagnotics
+```{r}
+par(mfrow=c(1, 2))
+plot(Final_Parsimonious_Model, which = 1)
+hist(Final_Parsimonious_Model$residuals, main = "", xlab = "Residuals")
+```
+
+From the residual plot for the final parsimonious model, we can see that there is much improvement in the trend. Although it is far from perfect, a significant curve does not exist anymore. However, we would like for the line to be more straight. The linearity assumption is close to being satisfied as the trend in the scatterplot is a line almost centered around 0. There appears to be no clear violation of independence. The residuals show a distribution that is approximately bell-shaped in the histogram. There appears to be constant variance centered around 0 in the residual plot, so the constant variance assumption is met.
+
+\pagebreak
+
+# 12. Conclusion 
+
+Playing on the PGA Tour is nearly as difficult financially as it is in terms of skill and ability. Through our analysis we have created a model that PGA professionals can follow to maximize their winnings on tour. Our model says that while driving distance is a critical factor to playing profitably, short game performance is even more so. In our parsimonious model, we see that three out of six of our variables are related to short-game performance (Average.Putts, Average.Scrambling, Average.SG.Putts).  This shows that a player who focuses their efforts primarily on improving their short game will see the largest "return on investment" so to speak. Spending money to work with trainers and coaches to improve in this area of the game is money well spent, according to our model.  
+
+Our model determined that the most important Strokes Gained metrics in earning money are Average.SG.Putts and Average.SG.Total. It stumps us that Strokes Gained:APR is not featured in our final model, even though it is historically a metric that holds immense value.
+
+Beyond offering training plan insights to tour professionals, our model may also help decide star performers during the PGA season. Given that high yearly earnings inherently require multiple top-10 finishes or better at tournaments, it is reasonable to assume the players showing proficiency in our model's metrics will likely achieve high finishes in competition. In other words, our model may be useful to the sport-betting industry in figuring out odds or giving individuals an educated edge when placing their bets. 
+
+**Our research team does not promote gambling of any form, nor do we guarantee or ensure successful results by using the model developed in this paper.**
+
+\pagebreak
+
+# 13. References 
+
+Cunneff, Tom. "The Tour’s evolving ShotLink data is a game changer, and not just for Strokes Gained geeks (you can bet on that)." Golf. September 5, 2019. 
+https://golf.com/gear/pga-tour-shotlink-data-game-changer-you-can-bet-on-it/
+
+Klein, S. Bradley. "Going the Distance." USGA. April 23, 2021. https://www.usga.org/content/usga/home-page/articles/2021/04/going-the-distance.html
+
+Powers, Christopher. "Want to become a better golf bettor? Here are the stats you should be paying attention to." GolfDigest. October 29, 2020.  
+https://www.golfdigest.com/story/stats-you-should-be-paying-attention-to-pga-tour
+
+Sens, Josh. "The Man With Two Brains: Strokes gained guru Mark Broadie’s pioneering analytics have radically altered the game." Golf. September 11, 2018. 
+https://golf.com/travel/the-man-with-two-brains-stokes-gained-guru-mark-broadies-pioneering-analytics-have-radically-altered-the-game/
+
+Sherman, Jon. Four Foundations of Golf. LinkedIn. June 22, 2023. https://www.linkedin.com/posts/jon-sherman-945497ba_4-pga-tour-stats-that-will-change-your-perspective-activity-7087050047854370817-a6an/
+
+Stachura, Mike. A closer look at handicap data shows just how much golfers have improved in recent years. GolfDigest. February 11, 2017. 
+https://www.golfdigest.com/story/a-closer-look-at-handicap-data-shows-just-how-much-golfers-have-improved-in-recent-years
+
+Taylor, David. "Do We Really Need to Lengthen Golf Courses?" Golf Monthly. August 22, 2016. https://www.golfmonthly.com/features/the-game/really-need-lengthen-golf-courses-113139
+
+
+
